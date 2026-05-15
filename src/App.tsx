@@ -11,6 +11,7 @@ import {
   weekdayShort,
   weekKeys,
 } from './dates'
+import { BaStamp } from './BaStamp'
 import { useNotes } from './useNotes'
 import { useTodos } from './useTodos'
 import './App.css'
@@ -153,15 +154,24 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-brand">
-        <h1 className="app-brand__title">
-          <span className="app-brand__line">
-            <span className="app-brand__todo">To-do list</span>
-            <span className="app-brand__slash" aria-hidden="true">
-              /
+        <div className="app-brand__top">
+          <h1 className="app-brand__title">
+            <span className="app-brand__line">
+              <span className="app-brand__todo">To-do list</span>
+              <span className="app-brand__slash" aria-hidden="true">
+                /
+              </span>
+              <span className="app-brand__planner">Planner</span>
             </span>
-            <span className="app-brand__planner">Planner</span>
-          </span>
-        </h1>
+          </h1>
+          <div
+            className="ba-stamp-wrap"
+            title="Bareq Aljuboori"
+            aria-label="Bareq Aljuboori — BA monogram stamp"
+          >
+            <BaStamp />
+          </div>
+        </div>
         <p className="app-brand__tagline">
           Week view, times, and notes — saved in this browser.
         </p>
