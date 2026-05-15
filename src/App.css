@@ -1,6 +1,14 @@
 .app {
   width: 100%;
   max-width: 680px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.app__tasks-panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -329,7 +337,8 @@
 
 .composer__time {
   flex: 1;
-  min-width: 6.5rem;
+  min-width: 0;
+  max-width: 100%;
   padding: 0.5rem 0.55rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -460,7 +469,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 .list__head {
   display: grid;
-  grid-template-columns: minmax(4.75rem, 6rem) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(3.25rem, 5.25rem) minmax(7.5rem, 1fr) minmax(0, auto);
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.4rem 0.75rem 0.45rem;
@@ -504,19 +513,22 @@ input[type='time']::-webkit-calendar-picker-indicator {
 }
 
 .notes-card {
-  margin-top: 1rem;
+  margin-top: clamp(1.1rem, 4.5vw, 2rem);
   padding: 1rem 0.85rem 1.15rem;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface-2);
+  box-shadow: var(--shadow);
 }
 
 .notes-card__heading {
   margin: 0 0 0.35rem;
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-family: var(--font-planner);
+  font-size: 1.38rem;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   color: var(--ink);
 }
 
@@ -560,7 +572,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 .list__item {
   display: grid;
-  grid-template-columns: minmax(4.75rem, 6rem) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(3.25rem, 5.25rem) minmax(7.5rem, 1fr) minmax(0, auto);
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.55rem 0.65rem 0.55rem 0.75rem;
@@ -582,6 +594,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   justify-content: flex-end;
   gap: 0.35rem;
   flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .field-label {
@@ -630,7 +643,8 @@ input[type='time']::-webkit-calendar-picker-indicator {
   flex: 1;
   min-width: 0;
   padding-top: 0.05rem;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
   line-height: 1.4;
 }
 
@@ -647,9 +661,10 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 .row__time {
   flex: 1;
-  min-width: 5.5rem;
-  width: auto;
-  max-width: none;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   padding: 0.28rem 0.35rem;
   font-size: 0.78rem;
   font-weight: 500;
@@ -813,6 +828,16 @@ input[type='time']::-webkit-calendar-picker-indicator {
   .composer__input,
   .composer__submit {
     min-height: var(--touch-min, 2.75rem);
+  }
+
+  .composer__input {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .composer__row {
+    align-items: stretch;
   }
 
   .filters__btn {

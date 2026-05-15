@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
   type FormEvent,
-  type MouseEvent,
 } from 'react'
 import type { Filter, Todo } from './types'
 import {
@@ -20,6 +19,7 @@ import {
   weekKeys,
 } from './dates'
 import { NotesCard } from './NotesCard'
+import { onTimeInputKeyDown, onTimeInputPointerDown } from './timePicker'
 import { useTodos } from './useTodos'
 import './App.css'
 
@@ -38,18 +38,6 @@ function sortTodosByTime(items: Todo[]): Todo[] {
     if (c !== 0) return c
     return a.createdAt - b.createdAt
   })
-}
-
-function timeInputActivate(e: MouseEvent<HTMLInputElement>) {
-  const ext = e.currentTarget as HTMLInputElement & {
-    showPicker?: () => void | Promise<void>
-  }
-  try {
-    const result = ext.showPicker?.()
-    void Promise.resolve(result).catch(() => {})
-  } catch {
-    /* older browsers: native control still works */
-  }
 }
 
 export default function App() {
@@ -165,6 +153,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <div className="app__tasks-panel">
       <header className="app-brand">
         <h1 className="app-brand__title">
           <span className="app-brand__line">
@@ -285,7 +274,8 @@ export default function App() {
                   step={60}
                   value={draftTime}
                   onChange={(e) => setDraftTime(e.target.value)}
-                  onClick={timeInputActivate}
+                  onPointerDown={onTimeInputPointerDown}
+                  onKeyDown={onTimeInputKeyDown}
                 />
               </div>
               <button className="composer__submit" type="submit">
@@ -293,7 +283,7 @@ export default function App() {
               </button>
             </div>
             <p className="composer__hint">
-              Time is optional — tap the time field to change it.
+              Time is optional — click or tap the time field to change it.
             </p>
           </form>
 
@@ -357,7 +347,8 @@ export default function App() {
                         onChange={(e) =>
                           setTime(todo.id, e.target.value || null)
                         }
-                        onClick={timeInputActivate}
+                        onPointerDown={onTimeInputPointerDown}
+                        onKeyDown={onTimeInputKeyDown}
                       />
                     </div>
                     <div className="list__cell list__cell--task">
@@ -402,8 +393,6 @@ export default function App() {
             </ul>
           </div>
 
-          <NotesCard key={notesScope} scopeKey={notesScope} />
-
           {scopeTodos.length > 0 && (
             <footer className="footer">
               <p className="footer__counts">
@@ -430,6 +419,9 @@ export default function App() {
               )}
             </footer>
           )}
+      </div>
+
+      <NotesCard key={notesScope} scopeKey={notesScope} />
     </div>
   )
 }

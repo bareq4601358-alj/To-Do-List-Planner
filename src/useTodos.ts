@@ -3,6 +3,17 @@ import type { Todo } from './types'
 
 const STORAGE_KEY = 'todo-list-v1'
 
+/** Works on `http://LAN_IP:port` (no secure context); `randomUUID` needs HTTPS or localhost. */
+function newTodoId(): string {
+  try {
+    const c = globalThis.crypto
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID()
+  } catch {
+    /* non-secure context or blocked */
+  }
+  return `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 11)}`
+}
+
 function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null
 }
@@ -49,7 +60,11 @@ function load(): Todo[] {
 }
 
 function persist(todos: Todo[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos))
+  } catch {
+    /* quota, private mode, or storage disabled — keep in-memory list */
+  }
 }
 
 export function useTodos() {
@@ -67,7 +82,7 @@ export function useTodos() {
     ): string | undefined => {
       const trimmed = title.trim()
       if (!trimmed) return undefined
-      const id = crypto.randomUUID()
+      const id = newTodoId()
       const normalizedTime =
         time && /^\d{2}:\d{2}$/.test(time) ? time : null
       setTodos((prev) => [

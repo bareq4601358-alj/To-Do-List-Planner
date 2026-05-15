@@ -13,10 +13,14 @@ export default defineConfig(({ command }) => ({
     host: true,
     port: 5173,
     strictPort: false,
+    // Cursor / VS Code port preview & tunnels send a non-localhost Host header; without
+    // this, Vite responds with “Blocked request. This host is not allowed.”
+    allowedHosts: true,
   },
   preview: {
     host: true,
     port: 4173,
     strictPort: false,
+    allowedHosts: true,
   },
 }))
