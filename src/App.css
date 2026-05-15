@@ -342,7 +342,7 @@
   width: max-content;
   max-width: 100%;
   min-width: 0;
-  padding: 0.5rem 2.1rem 0.5rem 0.55rem;
+  padding: 0.5rem 0.65rem 0.5rem 0.55rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface-2);
@@ -396,42 +396,15 @@
 }
 
 /*
- * WebKit time picker: do NOT stretch an invisible indicator over the whole field —
- * Safari often stops opening the native UI (clicks hit a dead pseudo-layer).
- * Keep a normal-sized affordance; Blink still opens from anywhere via JS showPicker.
+ * Native `input[type=time]` (mobile / coarse pointer): hide the WebKit clock
+ * chip. Desktop fine pointer uses the custom dropdown (`TimeInput.tsx`).
  */
 .time-input::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  width: 1.85rem;
-  height: 1.85rem;
-  max-height: 100%;
-  padding: 0.15rem;
-  margin: 0 0 0 0.2rem;
-  opacity: 1;
-  flex-shrink: 0;
+  display: none;
 }
 
-/* Desktop (fine pointer): chip-like control + corner clock; digits read like mobile */
+/* Desktop (fine pointer): chip-like time text; no clock glyph */
 @media (min-width: 640px) and (pointer: fine) {
-  .time-input::-webkit-calendar-picker-indicator {
-    inset: auto;
-    right: 0.45rem;
-    top: 50%;
-    left: auto;
-    width: 1.2rem;
-    height: 1.2rem;
-    margin: 0;
-    padding: 0;
-    opacity: 1;
-    transform: translateY(-50%);
-    cursor: pointer;
-    background-color: color-mix(in srgb, var(--muted) 88%, var(--ink));
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.25' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' d='M12 8v4l2.25 1.5'/%3E%3C/svg%3E")
-      center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.25' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' d='M12 8v4l2.25 1.5'/%3E%3C/svg%3E")
-      center / contain no-repeat;
-  }
-
   .time-input::-webkit-datetime-edit-hour-field,
   .time-input::-webkit-datetime-edit-minute-field {
     padding: 0.2em 0.32em;
@@ -453,7 +426,7 @@
   .composer__time.time-input,
   .composer__time.time-dropdown-trigger {
     min-height: 2.8rem;
-    padding: 0.55rem 2.45rem 0.55rem 0.75rem;
+    padding: 0.55rem 0.65rem 0.55rem 0.75rem;
     font-size: 0.95rem;
     font-weight: 550;
     letter-spacing: 0.01em;
@@ -465,7 +438,7 @@
   .row__time.time-input,
   .row__time.time-dropdown-trigger {
     min-height: 2.35rem;
-    padding: 0.42rem 2.15rem 0.42rem 0.55rem;
+    padding: 0.42rem 0.65rem 0.42rem 0.55rem;
     font-size: 0.9rem;
     font-weight: 550;
     letter-spacing: 0.02em;
@@ -479,15 +452,9 @@
   .row__time.time-dropdown-trigger:focus {
     color: var(--ink);
   }
-
-  /* No native clock affordance — extra padding was clipping the label in a narrow grid track */
-  .row__time.time-dropdown-trigger,
-  .composer__time.time-dropdown-trigger {
-    padding-inline-end: 0.65rem;
-  }
 }
 
-/* Safari desktop: custom time dropdown (button + portal panel) */
+/* Desktop fine pointer: custom time dropdown (button + portal panel) */
 .time-input-shell {
   width: max-content;
   max-width: 100%;
@@ -892,9 +859,58 @@ button.time-dropdown-trigger:focus {
 }
 
 @media (min-width: 640px) {
+  .list__head,
+  .list__item {
+    grid-template-columns: 7.75rem minmax(0, 1fr) auto;
+  }
+
   .list__cell--time .field-label,
   .list__cell--actions .field-label {
     display: none;
+  }
+
+  .list__cell--time {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    justify-self: stretch;
+  }
+
+  .list__cell--time .row__time,
+  .list__cell--time .time-input-shell,
+  .list__cell--time input.time-input,
+  .list__cell--time button.time-dropdown-trigger {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .list__cell--time .time-dropdown-trigger__value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .composer__time-block {
+    width: 7.75rem;
+    max-width: 100%;
+  }
+
+  .composer__time {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .composer__time-block .time-input-shell {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .composer__time.time-input,
+  .composer__time.time-dropdown-trigger {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -964,7 +980,7 @@ button.time-dropdown-trigger:focus {
   min-width: 0;
   width: 100%;
   max-width: 100%;
-  padding: 0.28rem 2.05rem 0.28rem 0.35rem;
+  padding: 0.28rem 0.65rem 0.28rem 0.35rem;
   font-size: 0.78rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -989,10 +1005,7 @@ button.time-dropdown-trigger:focus {
   flex-direction: column;
   gap: 0.1rem;
   overflow: visible;
-  min-width: auto;
-  width: max-content;
-  max-width: 100%;
-  justify-self: start;
+  min-width: 0;
 }
 
 .row__date-wrap {
@@ -1126,20 +1139,11 @@ button.time-dropdown-trigger:focus {
 
   .list__cell--task .row {
     flex-wrap: nowrap;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.45rem;
   }
 
   .list__cell--task .row__title-label {
-    min-width: 0;
-  }
-
-  .list__cell--task .row__title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow-wrap: normal;
-    word-break: normal;
     min-width: 0;
   }
 
@@ -1149,7 +1153,7 @@ button.time-dropdown-trigger:focus {
     height: 1.4rem;
     min-width: 1.4rem;
     min-height: 1.4rem;
-    margin: 0;
+    margin: 0.2rem 0 0;
     accent-color: var(--accent);
   }
 

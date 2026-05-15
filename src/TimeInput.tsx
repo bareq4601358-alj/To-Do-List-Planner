@@ -25,12 +25,9 @@ function isPureWebKit(): boolean {
   return !/\b(?:Chrome|Chromium|CriOS|EdgA?)\b/.test(ua)
 }
 
-function readSafariDesktopDropdown(): boolean {
+function readDesktopTimeDropdown(): boolean {
   if (typeof window === 'undefined') return false
-  return (
-    isPureWebKit() &&
-    window.matchMedia('(min-width: 640px) and (pointer: fine)').matches
-  )
+  return window.matchMedia('(min-width: 640px) and (pointer: fine)').matches
 }
 
 /**
@@ -50,9 +47,9 @@ type Props = Omit<
 }
 
 /**
- * Safari desktop: custom hour/minute dropdown (Chrome-like). Other platforms:
- * native `input type="time"` with programmatic picker on Blink desktop.
- * Touch stays native everywhere.
+ * Desktop (wide + fine pointer): same custom hour/minute control as Safari
+ * (`SafariDesktopTimeInput` — locale 12h label + caret). Narrow viewports and
+ * touch use native `input type="time"`; Blink still uses `showPicker()` there.
  */
 export function TimeInput({
   value,
@@ -65,13 +62,13 @@ export function TimeInput({
   ...rest
 }: Props) {
   const ref = useRef<HTMLInputElement>(null)
-  const [safariDesktopDropdown, setSafariDesktopDropdown] = useState(
-    readSafariDesktopDropdown,
+  const [desktopTimeDropdown, setDesktopTimeDropdown] = useState(
+    readDesktopTimeDropdown,
   )
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 640px) and (pointer: fine)')
-    const sync = () => setSafariDesktopDropdown(readSafariDesktopDropdown())
+    const sync = () => setDesktopTimeDropdown(readDesktopTimeDropdown())
     sync()
     mq.addEventListener('change', sync)
     return () => mq.removeEventListener('change', sync)
@@ -93,7 +90,7 @@ export function TimeInput({
       })
   }, [])
 
-  if (safariDesktopDropdown) {
+  if (desktopTimeDropdown) {
     return (
       <SafariDesktopTimeInput
         id={id}
