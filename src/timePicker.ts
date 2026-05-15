@@ -1,4 +1,4 @@
-import type { KeyboardEvent, MouseEvent } from 'react'
+import type { KeyboardEvent, PointerEvent } from 'react'
 
 function callShowPicker(el: HTMLInputElement) {
   try {
@@ -11,21 +11,18 @@ function callShowPicker(el: HTMLInputElement) {
   }
 }
 
-function prefersFinePointer(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(pointer: fine)').matches
-  )
-}
-
 /**
- * Touch / coarse pointers: skip so the browser’s native tap behavior runs.
- * Mouse / fine pointers: `showPicker()` must run in the same synchronous turn
- * as the user gesture — deferring (e.g. `queueMicrotask`) breaks desktop Chrome.
+ * Mouse / pen: open the picker in the **same synchronous** user gesture.
+ * (`queueMicrotask` breaks desktop Chrome; `(pointer: fine)` + `click` misses
+ * some desktop setups.)
+ *
+ * Touch: do nothing so native tap behavior matches phones.
  */
-export function onTimeInputClick(e: MouseEvent<HTMLInputElement>): void {
-  if (!prefersFinePointer()) return
-  if (e.detail === 0) return
+export function onTimeInputPointerDown(
+  e: PointerEvent<HTMLInputElement>,
+): void {
+  if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return
+  e.preventDefault()
   callShowPicker(e.currentTarget)
 }
 

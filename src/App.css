@@ -588,6 +588,11 @@ input[type='time']::-webkit-calendar-picker-indicator {
   width: 100%;
 }
 
+.list__cell--task {
+  grid-column: 2;
+  min-width: 0;
+}
+
 .list__cell--actions {
   display: flex;
   align-items: center;
@@ -595,6 +600,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   gap: 0.35rem;
   flex-wrap: nowrap;
   min-width: 0;
+  grid-column: 3;
 }
 
 .field-label {
@@ -607,7 +613,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   margin-bottom: 0.15rem;
 }
 
-@media (min-width: 521px) {
+@media (min-width: 640px) {
   .list__cell--time .field-label,
   .list__cell--actions .field-label {
     display: none;
@@ -689,6 +695,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  grid-column: 1;
 }
 
 .row__date-wrap {
@@ -793,8 +800,41 @@ input[type='time']::-webkit-calendar-picker-indicator {
   outline-offset: 2px;
 }
 
-/* ——— Narrow screens: safe areas & touch targets (layout matches desktop) ——— */
+/* ——— Narrow screens: safe areas & touch targets ——— */
 @media (max-width: 639px) {
+  .list-wrap {
+    overflow-x: visible;
+  }
+
+  .list__head {
+    display: none;
+  }
+
+  .list__item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    row-gap: 0.55rem;
+    column-gap: 0.65rem;
+    align-items: center;
+  }
+
+  .list__cell--task {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .list__cell--time {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 10rem;
+  }
+
+  .list__cell--actions {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
   .planner-toolbar__nav {
     width: var(--touch-min, 2.75rem);
     height: var(--touch-min, 2.75rem);
