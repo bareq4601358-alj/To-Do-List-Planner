@@ -19,7 +19,7 @@ import {
   weekKeys,
 } from './dates'
 import { NotesCard } from './NotesCard'
-import { onTimeInputKeyDown, onTimeInputPointerDown } from './timePicker'
+import { TimeInput } from './TimeInput'
 import { useTodos } from './useTodos'
 import './App.css'
 
@@ -267,15 +267,11 @@ export default function App() {
                 <label className="composer__time-label" htmlFor="task-time">
                   Time
                 </label>
-                <input
+                <TimeInput
                   id="task-time"
                   className="composer__time"
-                  type="time"
-                  step={60}
                   value={draftTime}
-                  onChange={(e) => setDraftTime(e.target.value)}
-                  onPointerDown={onTimeInputPointerDown}
-                  onKeyDown={onTimeInputKeyDown}
+                  onValueChange={(v) => setDraftTime(v ?? '')}
                 />
               </div>
               <button className="composer__submit" type="submit">
@@ -334,6 +330,17 @@ export default function App() {
               ) : (
                 visibleSorted.map((todo) => (
                   <li key={todo.id} className="list__item">
+                    <div className="list__cell list__cell--time">
+                      <label className="field-label" htmlFor={`time-${todo.id}`}>
+                        Time
+                      </label>
+                      <TimeInput
+                        id={`time-${todo.id}`}
+                        className="row__time"
+                        value={todo.time ?? ''}
+                        onValueChange={(v) => setTime(todo.id, v)}
+                      />
+                    </div>
                     <div className="list__cell list__cell--task">
                       <label className="row">
                         <input
@@ -348,23 +355,6 @@ export default function App() {
                           {todo.title}
                         </span>
                       </label>
-                    </div>
-                    <div className="list__cell list__cell--time">
-                      <label className="field-label" htmlFor={`time-${todo.id}`}>
-                        Time
-                      </label>
-                      <input
-                        id={`time-${todo.id}`}
-                        className="row__time"
-                        type="time"
-                        step={60}
-                        value={todo.time ?? ''}
-                        onChange={(e) =>
-                          setTime(todo.id, e.target.value || null)
-                        }
-                        onPointerDown={onTimeInputPointerDown}
-                        onKeyDown={onTimeInputKeyDown}
-                      />
                     </div>
                     <div className="list__cell list__cell--actions">
                       <label className="row__date-wrap">

@@ -469,7 +469,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 .list__head {
   display: grid;
-  grid-template-columns: minmax(3.25rem, 5.25rem) minmax(7.5rem, 1fr) minmax(0, auto);
+  grid-template-columns: minmax(4.75rem, 6rem) minmax(0, 1fr) auto;
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.4rem 0.75rem 0.45rem;
@@ -572,7 +572,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
 
 .list__item {
   display: grid;
-  grid-template-columns: minmax(3.25rem, 5.25rem) minmax(7.5rem, 1fr) minmax(0, auto);
+  grid-template-columns: minmax(4.75rem, 6rem) minmax(0, 1fr) auto;
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.55rem 0.65rem 0.55rem 0.75rem;
@@ -588,11 +588,6 @@ input[type='time']::-webkit-calendar-picker-indicator {
   width: 100%;
 }
 
-.list__cell--task {
-  grid-column: 2;
-  min-width: 0;
-}
-
 .list__cell--actions {
   display: flex;
   align-items: center;
@@ -600,7 +595,6 @@ input[type='time']::-webkit-calendar-picker-indicator {
   gap: 0.35rem;
   flex-wrap: nowrap;
   min-width: 0;
-  grid-column: 3;
 }
 
 .field-label {
@@ -695,7 +689,6 @@ input[type='time']::-webkit-calendar-picker-indicator {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  grid-column: 1;
 }
 
 .row__date-wrap {
@@ -811,28 +804,39 @@ input[type='time']::-webkit-calendar-picker-indicator {
   }
 
   .list__item {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto 1fr auto auto;
     grid-template-rows: auto auto;
+    grid-template-areas:
+      'list-time . list-date list-remove'
+      'list-task list-task list-task list-task';
+    column-gap: 0.5rem;
     row-gap: 0.55rem;
-    column-gap: 0.65rem;
     align-items: center;
   }
 
-  .list__cell--task {
-    grid-column: 1 / -1;
-    grid-row: 1;
+  .list__cell--time {
+    grid-area: list-time;
+    align-self: center;
+    max-width: 9.5rem;
   }
 
-  .list__cell--time {
-    grid-column: 1;
-    grid-row: 2;
-    max-width: 10rem;
+  .list__cell--task {
+    grid-area: list-task;
   }
 
   .list__cell--actions {
-    grid-column: 2;
-    grid-row: 2;
+    display: contents;
+  }
+
+  .list__item .row__date-wrap {
+    grid-area: list-date;
     justify-self: end;
+  }
+
+  .list__item .row__remove {
+    grid-area: list-remove;
+    justify-self: end;
+    align-self: center;
   }
 
   .planner-toolbar__nav {
