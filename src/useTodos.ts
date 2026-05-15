@@ -60,15 +60,20 @@ export function useTodos() {
   }, [todos])
 
   const add = useCallback(
-    (title: string, dueDate: string | null, time: string | null) => {
+    (
+      title: string,
+      dueDate: string | null,
+      time: string | null,
+    ): string | undefined => {
       const trimmed = title.trim()
-      if (!trimmed) return
+      if (!trimmed) return undefined
+      const id = crypto.randomUUID()
       const normalizedTime =
         time && /^\d{2}:\d{2}$/.test(time) ? time : null
       setTodos((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id,
           title: trimmed,
           done: false,
           createdAt: Date.now(),
@@ -76,6 +81,7 @@ export function useTodos() {
           time: normalizedTime,
         },
       ])
+      return id
     },
     [],
   )

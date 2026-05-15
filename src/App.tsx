@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react'
-import type { Filter, MainTab, Todo } from './types'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Filter, Todo } from './types'
 import {
   addDays,
   formatSelectedHeading,
@@ -32,6 +32,13 @@ function sortTodosByTime(items: Todo[]): Todo[] {
   })
 }
 
+function openTimePicker(elementId: string) {
+  const el = document.getElementById(elementId)
+  if (!(el instanceof HTMLInputElement)) return
+  const picker = el as HTMLInputElement & { showPicker?: () => void }
+  picker.showPicker?.()
+}
+
 export default function App() {
   const {
     todos,
@@ -49,8 +56,9 @@ export default function App() {
     [],
   )
 
-  const [mainTab, setMainTab] = useState<MainTab>('planner')
   const [weekMondayKey, setWeekMondayKey] = useState(mondayThisWeek)
+  const [highlightId, setHighlightId] = useState<string | null>(null)
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [selected, setSelected] = useState<string | 'inbox'>(() => todayKey())
   const [draft, setDraft] = useState('')
   const [draftTime, setDraftTime] = useState('')
@@ -113,9 +121,17 @@ export default function App() {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     const timeVal = draftTime.trim() || null
-    add(draft, selected === 'inbox' ? null : selected, timeVal)
+    const newId = add(draft, selected === 'inbox' ? null : selected, timeVal)
     setDraft('')
     setDraftTime('')
+    if (newId) {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current)
+      setHighlightId(newId)
+      highlightTimer.current = setTimeout(() => {
+        setHighlightId(null)
+        highlightTimer.current = null
+      }, 2800)
+    }
   }
 
   function clearDoneInView() {
@@ -127,6 +143,12 @@ export default function App() {
     () => todos.filter((t) => !t.done && t.dueDate === null).length,
     [todos],
   )
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current)
+    }
+  }, [])
 
   return (
     <div className="app">
@@ -145,53 +167,7 @@ export default function App() {
         </p>
       </header>
 
-      <nav className="app-tabs" role="tablist" aria-label="Main sections">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mainTab === 'planner'}
-          className={`app-tabs__btn${mainTab === 'planner' ? ' app-tabs__btn--active' : ''}`}
-          onClick={() => setMainTab('planner')}
-        >
-          Planner
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mainTab === 'notes'}
-          className={`app-tabs__btn${mainTab === 'notes' ? ' app-tabs__btn--active' : ''}`}
-          onClick={() => setMainTab('notes')}
-        >
-          Notes
-        </button>
-      </nav>
-
-      {mainTab === 'notes' ? (
-        <section className="notes" aria-labelledby="notes-heading">
-          <h2 id="notes-heading" className="notes__title">
-            Notes
-          </h2>
-          <p className="notes__lede">
-            Scratch ideas, links, or anything that does not belong on the task
-            list.
-          </p>
-          <label className="notes__label" htmlFor="notes-body">
-            Your notes
-          </label>
-          <textarea
-            id="notes-body"
-            className="notes__textarea"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Write freely…"
-            rows={14}
-            spellCheck
-          />
-          <p className="notes__hint">Autosaved in this browser.</p>
-        </section>
-      ) : (
-        <>
-          <header className="app__header">
+      <header className="app__header">
             <p className="app__eyebrow">This view</p>
             <h2 className="app__title">
               {selected === 'inbox' ? 'Inbox' : formatSelectedHeading(selected)}
@@ -289,19 +265,32 @@ export default function App() {
                 <label className="composer__time-label" htmlFor="task-time">
                   Time
                 </label>
-                <input
-                  id="task-time"
-                  className="composer__time"
-                  type="time"
-                  value={draftTime}
-                  onChange={(e) => setDraftTime(e.target.value)}
-                />
+                <div className="time-field">
+                  <input
+                    id="task-time"
+                    className="composer__time"
+                    type="time"
+                    step={60}
+                    value={draftTime}
+                    onChange={(e) => setDraftTime(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="time-field__open"
+                    aria-label="Open time picker"
+                    onClick={() => openTimePicker('task-time')}
+                  >
+                    Pick
+                  </button>
+                </div>
               </div>
               <button className="composer__submit" type="submit">
                 Add
               </button>
             </div>
-            <p className="composer__hint">Time is optional — leave blank for no slot.</p>
+            <p className="composer__hint">
+              Time is optional — tap the field or &quot;Pick&quot; to choose a time.
+            </p>
           </form>
 
           <div
@@ -355,15 +344,26 @@ export default function App() {
                       <label className="field-label" htmlFor={`time-${todo.id}`}>
                         Time
                       </label>
-                      <input
-                        id={`time-${todo.id}`}
-                        className="row__time"
-                        type="time"
-                        value={todo.time ?? ''}
-                        onChange={(e) =>
-                          setTime(todo.id, e.target.value || null)
-                        }
-                      />
+                      <div className="time-field">
+                        <input
+                          id={`time-${todo.id}`}
+                          className="row__time"
+                          type="time"
+                          step={60}
+                          value={todo.time ?? ''}
+                          onChange={(e) =>
+                            setTime(todo.id, e.target.value || null)
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="time-field__open"
+                          aria-label={`Open time picker for ${todo.title}`}
+                          onClick={() => openTimePicker(`time-${todo.id}`)}
+                        >
+                          Pick
+                        </button>
+                      </div>
                     </div>
                     <div className="list__cell list__cell--task">
                       <label className="row">
@@ -374,7 +374,7 @@ export default function App() {
                           onChange={() => toggle(todo.id)}
                         />
                         <span
-                          className={`row__title${todo.done ? ' row__title--done' : ''}`}
+                          className={`row__title${todo.done ? ' row__title--done' : ' row__title--open'}${highlightId === todo.id ? ' row__title--fresh' : ''}`}
                         >
                           {todo.title}
                         </span>
@@ -405,6 +405,31 @@ export default function App() {
                 ))
               )}
             </ul>
+            <section
+              className="notes-inline"
+              aria-labelledby="notes-inline-heading"
+            >
+              <h3 className="notes-inline__heading" id="notes-inline-heading">
+                Notes
+              </h3>
+              <p className="notes-inline__lede">
+                Same box as your list — jot anything below your tasks for this
+                view.
+              </p>
+              <label className="visually-hidden" htmlFor="notes-inline-body">
+                Notes
+              </label>
+              <textarea
+                id="notes-inline-body"
+                className="notes-inline__textarea"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Write freely…"
+                rows={6}
+                spellCheck
+              />
+              <p className="notes-inline__hint">Autosaved in this browser.</p>
+            </section>
           </div>
 
           {scopeTodos.length > 0 && (
@@ -433,8 +458,6 @@ export default function App() {
               )}
             </footer>
           )}
-        </>
-      )}
     </div>
   )
 }

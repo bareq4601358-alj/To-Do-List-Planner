@@ -10,5 +10,3 @@ export type Todo = {
 }
 
 export type Filter = 'all' | 'active' | 'completed'
-
-export type MainTab = 'planner' | 'notes'
