@@ -66,7 +66,9 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`).
+Open the URL Vite prints. Prefer **`http://127.0.0.1:5173`** if `localhost` does not load (some tools block the name). The dev server also prints a **Network** URL (e.g. `http://192.168.x.x:5173`) for other devices on your Wi‑Fi.
+
+You must keep the terminal running while developing; if nothing loads, confirm nothing else is using port **5173**.
 
 ## Build
 

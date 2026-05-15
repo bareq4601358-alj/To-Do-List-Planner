@@ -8,4 +8,15 @@ const repoBase = '/To-Do-List-Planner/'
 export default defineConfig(({ command }) => ({
   plugins: [react()],
   base: command === 'build' ? repoBase : '/',
+  // Makes the “Local / Network” dev URLs work more reliably (Cursor preview, phone, etc.)
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: false,
+  },
+  preview: {
+    host: true,
+    port: 4173,
+    strictPort: false,
+  },
 }))
