@@ -13,14 +13,24 @@ export default defineConfig(({ command }) => ({
     host: true,
     port: 5173,
     strictPort: false,
-    // Cursor / VS Code port preview & tunnels send a non-localhost Host header; without
-    // this, Vite responds with “Blocked request. This host is not allowed.”
+    // Forwarded / tunnel / LAN hosts (Cursor port view, Simple Browser, etc.)
     allowedHosts: true,
+    // Embedded previews may use a different browser origin than the dev server.
+    cors: true,
+    hmr: {
+      // A failed WS + full-screen error overlay can look like a blank page in embedded browsers.
+      overlay: false,
+      timeout: 120_000,
+    },
+    warmup: {
+      clientFiles: ['./index.html', './src/main.tsx', './src/App.tsx'],
+    },
   },
   preview: {
     host: true,
     port: 4173,
     strictPort: false,
     allowedHosts: true,
+    cors: true,
   },
 }))

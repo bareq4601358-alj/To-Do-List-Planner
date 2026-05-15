@@ -830,16 +830,6 @@ input[type='time']::-webkit-calendar-picker-indicator {
     min-height: var(--touch-min, 2.75rem);
   }
 
-  .composer__input {
-    flex: 1 1 100%;
-    width: 100%;
-    min-width: 0;
-  }
-
-  .composer__row {
-    align-items: stretch;
-  }
-
   .filters__btn {
     min-height: 2.5rem;
     padding: 0.5rem 0.35rem;

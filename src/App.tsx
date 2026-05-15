@@ -19,7 +19,7 @@ import {
   weekKeys,
 } from './dates'
 import { NotesCard } from './NotesCard'
-import { onTimeInputKeyDown, onTimeInputPointerDown } from './timePicker'
+import { onTimeInputClick, onTimeInputKeyDown } from './timePicker'
 import { useTodos } from './useTodos'
 import './App.css'
 
@@ -274,7 +274,7 @@ export default function App() {
                   step={60}
                   value={draftTime}
                   onChange={(e) => setDraftTime(e.target.value)}
-                  onPointerDown={onTimeInputPointerDown}
+                  onClick={onTimeInputClick}
                   onKeyDown={onTimeInputKeyDown}
                 />
               </div>
@@ -347,7 +347,7 @@ export default function App() {
                         onChange={(e) =>
                           setTime(todo.id, e.target.value || null)
                         }
-                        onPointerDown={onTimeInputPointerDown}
+                        onClick={onTimeInputClick}
                         onKeyDown={onTimeInputKeyDown}
                       />
                     </div>
