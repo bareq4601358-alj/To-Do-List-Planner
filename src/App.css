@@ -339,7 +339,7 @@
   flex: 1;
   min-width: 0;
   max-width: 100%;
-  padding: 0.5rem 0.55rem;
+  padding: 0.5rem 2.1rem 0.5rem 0.55rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface-2);
@@ -357,19 +357,128 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+/* Shared time fields: match native controls to app theme */
+.time-input {
+  color-scheme: light dark;
+  font-variant-numeric: tabular-nums;
+  text-align: start;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.time-input::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+.time-input::-webkit-datetime-edit-text {
+  padding: 0 0.12em;
+  color: var(--muted);
+}
+
+.time-input::-webkit-datetime-edit-hour-field,
+.time-input::-webkit-datetime-edit-minute-field {
+  padding: 0.08em 0.12em;
+  border-radius: 4px;
+}
+
+.time-input:focus::-webkit-datetime-edit-text {
+  color: color-mix(in srgb, var(--muted) 65%, var(--ink));
+}
+
+.time-input::-webkit-clear-button,
+.time-input::-webkit-inner-spin-button {
+  display: none;
+}
+
+/*
+ * WebKit time picker: do NOT stretch an invisible indicator over the whole field —
+ * Safari often stops opening the native UI (clicks hit a dead pseudo-layer).
+ * Keep a normal-sized affordance; Blink still opens from anywhere via JS showPicker.
+ */
+.time-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  width: 1.85rem;
+  height: 1.85rem;
+  max-height: 100%;
+  padding: 0.15rem;
+  margin: 0 0 0 0.2rem;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+/* Desktop (fine pointer): chip-like control + corner clock; digits read like mobile */
+@media (min-width: 640px) and (pointer: fine) {
+  .time-input::-webkit-calendar-picker-indicator {
+    inset: auto;
+    right: 0.45rem;
+    top: 50%;
+    left: auto;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin: 0;
+    padding: 0;
+    opacity: 1;
+    transform: translateY(-50%);
+    cursor: pointer;
+    background-color: color-mix(in srgb, var(--muted) 88%, var(--ink));
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.25' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' d='M12 8v4l2.25 1.5'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.25' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' d='M12 8v4l2.25 1.5'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+
+  .time-input::-webkit-datetime-edit-hour-field,
+  .time-input::-webkit-datetime-edit-minute-field {
+    padding: 0.2em 0.32em;
+    margin: 0 0.04em;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--surface) 40%, var(--surface-2));
+    color: var(--ink);
+  }
+
+  .time-input:focus::-webkit-datetime-edit-hour-field,
+  .time-input:focus::-webkit-datetime-edit-minute-field {
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  }
+
+  .time-input:hover:not(:focus) {
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  }
+
+  .composer__time.time-input {
+    min-height: 2.8rem;
+    padding: 0.55rem 2.45rem 0.55rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 550;
+    letter-spacing: 0.01em;
+    border-radius: var(--radius-md);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 6%, transparent),
+      0 1px 3px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+
+  .row__time.time-input {
+    min-height: 2.35rem;
+    padding: 0.42rem 2.15rem 0.42rem 0.55rem;
+    font-size: 0.9rem;
+    font-weight: 550;
+    letter-spacing: 0.02em;
+    border-radius: 0.65rem;
+    color: color-mix(in srgb, var(--ink) 78%, var(--muted));
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 5%, transparent),
+      0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+
+  .row__time.time-input:focus {
+    color: var(--ink);
+  }
+}
+
 .composer__hint {
   margin: 0.5rem 0 1rem;
   font-size: 0.78rem;
   color: var(--muted);
-}
-
-input[type='time']::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0.25rem;
-  margin-left: 0.15rem;
-  opacity: 1;
 }
 
 .composer__input::placeholder {
@@ -665,7 +774,7 @@ input[type='time']::-webkit-calendar-picker-indicator {
   min-width: 0;
   width: 100%;
   max-width: 100%;
-  padding: 0.28rem 0.35rem;
+  padding: 0.28rem 2.05rem 0.28rem 0.35rem;
   font-size: 0.78rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -804,24 +913,28 @@ input[type='time']::-webkit-calendar-picker-indicator {
   }
 
   .list__item {
-    grid-template-columns: auto 1fr auto auto;
-    grid-template-rows: auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
     grid-template-areas:
-      'list-time . list-date list-remove'
-      'list-task list-task list-task list-task';
-    column-gap: 0.5rem;
-    row-gap: 0.55rem;
-    align-items: center;
-  }
-
-  .list__cell--time {
-    grid-area: list-time;
-    align-self: center;
-    max-width: 9.5rem;
+      'list-task list-time'
+      'list-task list-date'
+      'list-task list-remove';
+    column-gap: 0.65rem;
+    row-gap: 0.45rem;
+    align-items: start;
   }
 
   .list__cell--task {
     grid-area: list-task;
+    min-width: 0;
+  }
+
+  .list__cell--time {
+    grid-area: list-time;
+    justify-self: end;
+    align-self: center;
+    min-width: 0;
+    max-width: min(11rem, 100%);
   }
 
   .list__cell--actions {
@@ -831,12 +944,22 @@ input[type='time']::-webkit-calendar-picker-indicator {
   .list__item .row__date-wrap {
     grid-area: list-date;
     justify-self: end;
+    min-width: 0;
   }
 
   .list__item .row__remove {
     grid-area: list-remove;
     justify-self: end;
     align-self: center;
+  }
+
+  .list__cell--task .row__title {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .list__item .row__date {
+    max-width: 100%;
   }
 
   .planner-toolbar__nav {

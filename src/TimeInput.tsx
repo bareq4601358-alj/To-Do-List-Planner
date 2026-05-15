@@ -11,6 +11,23 @@ function openPicker(el: HTMLInputElement) {
   }
 }
 
+/**
+ * Pure WebKit (Safari desktop, iOS Safari, in-app WKWebView): native time UI is
+ * opened from the default pointer/click path. Calling `showPicker()` here often
+ * rejects or fights that path, leaving the field unresponsive.
+ *
+ * Blink-based browsers (Chrome, Edge, Opera, Chrome iOS) still benefit from a
+ * native capture listener so `showPicker()` runs in a real user gesture (React
+ * synthetics can drop activation).
+ */
+function shouldApplyProgrammaticTimePicker(): boolean {
+  if (typeof navigator === 'undefined') return true
+  const ua = navigator.userAgent
+  if (!/AppleWebKit/.test(ua)) return true
+  if (/\b(?:Chrome|Chromium|CriOS|EdgA?)\b/.test(ua)) return true
+  return false
+}
+
 type Props = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'type' | 'value' | 'onChange' | 'ref'
@@ -20,20 +37,27 @@ type Props = Omit<
 }
 
 /**
- * React synthetic `pointerdown` can miss user-activation for `showPicker()` on
- * some desktop browsers. A native capture listener keeps the gesture intact.
- * Touch is skipped so phones keep native time UI.
+ * Blink: native `pointerdown` capture + `showPicker()` keeps user activation.
+ * Safari / pure WebKit: no listener — rely on native picker + CSS that does not
+ * cover the field with an invisible calendar indicator (see App.css).
+ *
+ * Touch is skipped on Blink so phones keep a single native time UI.
  */
-export function TimeInput({ value, onValueChange, onKeyDown, ...rest }: Props) {
+export function TimeInput({
+  value,
+  onValueChange,
+  onKeyDown,
+  className,
+  ...rest
+}: Props) {
   const ref = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el || !shouldApplyProgrammaticTimePicker()) return
 
     const onPointerDownCapture = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return
-      e.preventDefault()
       openPicker(el)
     }
 
@@ -44,10 +68,13 @@ export function TimeInput({ value, onValueChange, onKeyDown, ...rest }: Props) {
       })
   }, [])
 
+  const mergedClass = [className, 'time-input'].filter(Boolean).join(' ')
+
   return (
     <input
       {...rest}
       ref={ref}
+      className={mergedClass || undefined}
       type="time"
       step={60}
       value={value}
