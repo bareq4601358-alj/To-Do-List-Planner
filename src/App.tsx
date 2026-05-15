@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import type { Filter } from './types'
+import type { Filter, MainTab, Todo } from './types'
 import {
   addDays,
   formatSelectedHeading,
@@ -11,6 +11,7 @@ import {
   weekdayShort,
   weekKeys,
 } from './dates'
+import { useNotes } from './useNotes'
 import { useTodos } from './useTodos'
 import './App.css'
 
@@ -18,18 +19,41 @@ function plural(n: number, word: string) {
   return n === 1 ? word : `${word}s`
 }
 
+function sortTodosByTime(items: Todo[]): Todo[] {
+  return [...items].sort((a, b) => {
+    const ta = a.time
+    const tb = b.time
+    if (!ta && !tb) return a.createdAt - b.createdAt
+    if (!ta) return 1
+    if (!tb) return -1
+    const c = ta.localeCompare(tb)
+    if (c !== 0) return c
+    return a.createdAt - b.createdAt
+  })
+}
+
 export default function App() {
-  const { todos, add, toggle, remove, setDueDate, clearCompletedWhere } =
-    useTodos()
+  const {
+    todos,
+    add,
+    toggle,
+    remove,
+    setDueDate,
+    setTime,
+    clearCompletedWhere,
+  } = useTodos()
+  const { notes, setNotes } = useNotes()
 
   const mondayThisWeek = useMemo(
     () => toDateKey(startOfWeekMonday(new Date())),
     [],
   )
 
+  const [mainTab, setMainTab] = useState<MainTab>('planner')
   const [weekMondayKey, setWeekMondayKey] = useState(mondayThisWeek)
   const [selected, setSelected] = useState<string | 'inbox'>(() => todayKey())
   const [draft, setDraft] = useState('')
+  const [draftTime, setDraftTime] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
 
   const weekStart = useMemo(() => parseDateKey(weekMondayKey), [weekMondayKey])
@@ -54,6 +78,8 @@ export default function App() {
     if (filter === 'completed') return scopeTodos.filter((t) => t.done)
     return scopeTodos
   }, [scopeTodos, filter])
+
+  const visibleSorted = useMemo(() => sortTodosByTime(visible), [visible])
 
   const activeInScope = useMemo(
     () => scopeTodos.reduce((n, t) => n + (t.done ? 0 : 1), 0),
@@ -86,8 +112,10 @@ export default function App() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    add(draft, selected === 'inbox' ? null : selected)
+    const timeVal = draftTime.trim() || null
+    add(draft, selected === 'inbox' ? null : selected, timeVal)
     setDraft('')
+    setDraftTime('')
   }
 
   function clearDoneInView() {
@@ -102,195 +130,310 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app__header">
-        <p className="app__eyebrow">Planner</p>
-        <h1 className="app__title">
-          {selected === 'inbox' ? 'Inbox' : formatSelectedHeading(selected)}
+      <header className="app-brand">
+        <h1 className="app-brand__title">
+          <span className="app-brand__line">
+            <span className="app-brand__todo">To-do list</span>
+            <span className="app-brand__slash" aria-hidden="true">
+              /
+            </span>
+            <span className="app-brand__planner">Planner</span>
+          </span>
         </h1>
-        <p className="app__lede">
-          {selected === 'inbox'
-            ? 'Ideas and tasks without a date land here. Schedule them when you are ready.'
-            : 'Check things off as you go — your list saves in this browser.'}
+        <p className="app-brand__tagline">
+          Week view, times, and notes — saved in this browser.
         </p>
       </header>
 
-      <div className="planner-toolbar">
+      <nav className="app-tabs" role="tablist" aria-label="Main sections">
         <button
           type="button"
-          className="planner-toolbar__nav"
-          aria-label="Previous week"
-          onClick={() => goWeek(-1)}
+          role="tab"
+          aria-selected={mainTab === 'planner'}
+          className={`app-tabs__btn${mainTab === 'planner' ? ' app-tabs__btn--active' : ''}`}
+          onClick={() => setMainTab('planner')}
         >
-          ‹
+          Planner
         </button>
-        <div className="planner-toolbar__label">
-          <span className="planner-toolbar__range">{formatWeekHeading(weekStart)}</span>
-          <button type="button" className="planner-toolbar__today" onClick={goToday}>
-            Today
-          </button>
-        </div>
         <button
           type="button"
-          className="planner-toolbar__nav"
-          aria-label="Next week"
-          onClick={() => goWeek(1)}
+          role="tab"
+          aria-selected={mainTab === 'notes'}
+          className={`app-tabs__btn${mainTab === 'notes' ? ' app-tabs__btn--active' : ''}`}
+          onClick={() => setMainTab('notes')}
         >
-          ›
+          Notes
         </button>
-      </div>
+      </nav>
 
-      <div className="week-strip" role="group" aria-label="Week">
-        <button
-          type="button"
-          className={`week-strip__inbox${selected === 'inbox' ? ' week-strip__inbox--active' : ''}`}
-          onClick={() => setSelected('inbox')}
-        >
-          <span className="week-strip__inbox-label">Inbox</span>
-          {inboxActiveCount > 0 && (
-            <span className="week-strip__badge">{inboxActiveCount}</span>
-          )}
-        </button>
-        {weekDayKeys.map((key) => {
-          const d = parseDateKey(key)
-          const isToday = key === todayKey()
-          const pending = activeCountByDay.get(key) ?? 0
-          return (
+      {mainTab === 'notes' ? (
+        <section className="notes" aria-labelledby="notes-heading">
+          <h2 id="notes-heading" className="notes__title">
+            Notes
+          </h2>
+          <p className="notes__lede">
+            Scratch ideas, links, or anything that does not belong on the task
+            list.
+          </p>
+          <label className="notes__label" htmlFor="notes-body">
+            Your notes
+          </label>
+          <textarea
+            id="notes-body"
+            className="notes__textarea"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Write freely…"
+            rows={14}
+            spellCheck
+          />
+          <p className="notes__hint">Autosaved in this browser.</p>
+        </section>
+      ) : (
+        <>
+          <header className="app__header">
+            <p className="app__eyebrow">This view</p>
+            <h2 className="app__title">
+              {selected === 'inbox' ? 'Inbox' : formatSelectedHeading(selected)}
+            </h2>
+            <p className="app__lede">
+              {selected === 'inbox'
+                ? 'Tasks without a date land here. Add a time if you like, then schedule on a day.'
+                : 'Add a task and optional time — rows sort by time. Remove a row anytime.'}
+            </p>
+          </header>
+
+          <div className="planner-toolbar">
             <button
-              key={key}
               type="button"
-              className={`week-strip__day${selected === key ? ' week-strip__day--active' : ''}${isToday ? ' week-strip__day--today' : ''}`}
-              onClick={() => setSelected(key)}
+              className="planner-toolbar__nav"
+              aria-label="Previous week"
+              onClick={() => goWeek(-1)}
             >
-              <span className="week-strip__dow">{weekdayShort(d)}</span>
-              <span className="week-strip__dom">{d.getDate()}</span>
-              {pending > 0 && (
-                <span className="week-strip__badge">{pending}</span>
+              ‹
+            </button>
+            <div className="planner-toolbar__label">
+              <span className="planner-toolbar__range">
+                {formatWeekHeading(weekStart)}
+              </span>
+              <button
+                type="button"
+                className="planner-toolbar__today"
+                onClick={goToday}
+              >
+                Today
+              </button>
+            </div>
+            <button
+              type="button"
+              className="planner-toolbar__nav"
+              aria-label="Next week"
+              onClick={() => goWeek(1)}
+            >
+              ›
+            </button>
+          </div>
+
+          <div className="week-strip" role="group" aria-label="Week">
+            <button
+              type="button"
+              className={`week-strip__inbox${selected === 'inbox' ? ' week-strip__inbox--active' : ''}`}
+              onClick={() => setSelected('inbox')}
+            >
+              <span className="week-strip__inbox-label">Inbox</span>
+              {inboxActiveCount > 0 && (
+                <span className="week-strip__badge">{inboxActiveCount}</span>
               )}
             </button>
-          )
-        })}
-      </div>
+            {weekDayKeys.map((key) => {
+              const d = parseDateKey(key)
+              const isToday = key === todayKey()
+              const pending = activeCountByDay.get(key) ?? 0
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`week-strip__day${selected === key ? ' week-strip__day--active' : ''}${isToday ? ' week-strip__day--today' : ''}`}
+                  onClick={() => setSelected(key)}
+                >
+                  <span className="week-strip__dow">{weekdayShort(d)}</span>
+                  <span className="week-strip__dom">{d.getDate()}</span>
+                  {pending > 0 && (
+                    <span className="week-strip__badge">{pending}</span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
 
-      <form className="composer" onSubmit={onSubmit}>
-        <label className="visually-hidden" htmlFor="task-input">
-          New task
-        </label>
-        <input
-          id="task-input"
-          className="composer__input"
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={
-            selected === 'inbox'
-              ? 'Add to inbox…'
-              : `Add for ${parseDateKey(selected).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}…`
-          }
-          autoComplete="off"
-          maxLength={280}
-        />
-        <button className="composer__submit" type="submit">
-          Add
-        </button>
-      </form>
-
-      <div
-        className="filters"
-        role="tablist"
-        aria-label="Filter tasks"
-      >
-        {(
-          [
-            ['all', 'All'],
-            ['active', 'Active'],
-            ['completed', 'Done'],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={filter === key}
-            className={`filters__btn${filter === key ? ' filters__btn--active' : ''}`}
-            onClick={() => setFilter(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <ul className="list" aria-live="polite">
-        {visible.length === 0 ? (
-          <li className="list__empty">
-            {scopeTodos.length === 0
-              ? selected === 'inbox'
-                ? 'Inbox is empty — capture anything without a date, then schedule it on a day.'
-                : 'No tasks for this day yet — add one above.'
-              : filter === 'active'
-                ? 'Nothing left to do here. Enjoy the win.'
-                : 'No completed tasks in this view yet.'}
-          </li>
-        ) : (
-          visible.map((todo) => (
-            <li key={todo.id} className="list__item">
-              <label className="row">
-                <input
-                  className="row__check"
-                  type="checkbox"
-                  checked={todo.done}
-                  onChange={() => toggle(todo.id)}
-                />
-                <span className={`row__title${todo.done ? ' row__title--done' : ''}`}>
-                  {todo.title}
-                </span>
+          <form className="composer" onSubmit={onSubmit}>
+            <div className="composer__row">
+              <label className="visually-hidden" htmlFor="task-input">
+                New task
               </label>
-              <div className="row__actions">
-                <label className="row__date-wrap">
-                  <span className="visually-hidden">Due date</span>
-                  <input
-                    className="row__date"
-                    type="date"
-                    value={todo.dueDate ?? ''}
-                    onChange={(e) =>
-                      setDueDate(todo.id, e.target.value || null)
-                    }
-                  />
+              <input
+                id="task-input"
+                className="composer__input"
+                type="text"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={
+                  selected === 'inbox'
+                    ? 'Add to inbox…'
+                    : `Add for ${parseDateKey(selected).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}…`
+                }
+                autoComplete="off"
+                maxLength={280}
+              />
+              <div className="composer__time-block">
+                <label className="composer__time-label" htmlFor="task-time">
+                  Time
                 </label>
+                <input
+                  id="task-time"
+                  className="composer__time"
+                  type="time"
+                  value={draftTime}
+                  onChange={(e) => setDraftTime(e.target.value)}
+                />
+              </div>
+              <button className="composer__submit" type="submit">
+                Add
+              </button>
+            </div>
+            <p className="composer__hint">Time is optional — leave blank for no slot.</p>
+          </form>
+
+          <div
+            className="filters"
+            role="tablist"
+            aria-label="Filter tasks"
+          >
+            {(
+              [
+                ['all', 'All'],
+                ['active', 'Active'],
+                ['completed', 'Done'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={filter === key}
+                className={`filters__btn${filter === key ? ' filters__btn--active' : ''}`}
+                onClick={() => setFilter(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="list-wrap">
+            {visibleSorted.length > 0 && (
+              <div className="list__head" aria-hidden="true">
+                <span>Time</span>
+                <span>Task</span>
+                <span>Date · remove</span>
+              </div>
+            )}
+            <ul className="list" aria-live="polite">
+              {visibleSorted.length === 0 ? (
+                <li className="list__empty">
+                  {scopeTodos.length === 0
+                    ? selected === 'inbox'
+                      ? 'Inbox is empty — capture anything without a date, then schedule it on a day.'
+                      : 'No tasks for this day yet — add one above.'
+                    : filter === 'active'
+                      ? 'Nothing left to do here. Enjoy the win.'
+                      : 'No completed tasks in this view yet.'}
+                </li>
+              ) : (
+                visibleSorted.map((todo) => (
+                  <li key={todo.id} className="list__item">
+                    <div className="list__cell list__cell--time">
+                      <label className="field-label" htmlFor={`time-${todo.id}`}>
+                        Time
+                      </label>
+                      <input
+                        id={`time-${todo.id}`}
+                        className="row__time"
+                        type="time"
+                        value={todo.time ?? ''}
+                        onChange={(e) =>
+                          setTime(todo.id, e.target.value || null)
+                        }
+                      />
+                    </div>
+                    <div className="list__cell list__cell--task">
+                      <label className="row">
+                        <input
+                          className="row__check"
+                          type="checkbox"
+                          checked={todo.done}
+                          onChange={() => toggle(todo.id)}
+                        />
+                        <span
+                          className={`row__title${todo.done ? ' row__title--done' : ''}`}
+                        >
+                          {todo.title}
+                        </span>
+                      </label>
+                    </div>
+                    <div className="list__cell list__cell--actions">
+                      <label className="row__date-wrap">
+                        <span className="field-label">Date</span>
+                        <input
+                          className="row__date"
+                          type="date"
+                          value={todo.dueDate ?? ''}
+                          onChange={(e) =>
+                            setDueDate(todo.id, e.target.value || null)
+                          }
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        className="row__remove"
+                        aria-label={`Remove row: ${todo.title}`}
+                        onClick={() => remove(todo.id)}
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+
+          {scopeTodos.length > 0 && (
+            <footer className="footer">
+              <p className="footer__counts">
+                <span className="footer__stat">
+                  {activeInScope} active {plural(activeInScope, 'task')}
+                </span>
+                {completedInScope > 0 && (
+                  <>
+                    <span className="footer__dot" aria-hidden>
+                      ·
+                    </span>
+                    <span className="footer__stat">{completedInScope} done</span>
+                  </>
+                )}
+              </p>
+              {completedInScope > 0 && (
                 <button
                   type="button"
-                  className="row__delete"
-                  aria-label={`Delete ${todo.title}`}
-                  onClick={() => remove(todo.id)}
+                  className="footer__clear"
+                  onClick={clearDoneInView}
                 >
-                  Remove
+                  Clear done in view
                 </button>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
-
-      {scopeTodos.length > 0 && (
-        <footer className="footer">
-          <p className="footer__counts">
-            <span className="footer__stat">
-              {activeInScope} active {plural(activeInScope, 'task')}
-            </span>
-            {completedInScope > 0 && (
-              <>
-                <span className="footer__dot" aria-hidden>
-                  ·
-                </span>
-                <span className="footer__stat">{completedInScope} done</span>
-              </>
-            )}
-          </p>
-          {completedInScope > 0 && (
-            <button type="button" className="footer__clear" onClick={clearDoneInView}>
-              Clear done in view
-            </button>
+              )}
+            </footer>
           )}
-        </footer>
+        </>
       )}
     </div>
   )

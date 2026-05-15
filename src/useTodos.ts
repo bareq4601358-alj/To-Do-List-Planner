@@ -9,7 +9,7 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 
 function migrateItem(raw: unknown): Todo | null {
   if (!isRecord(raw)) return null
-  const { id, title, done, createdAt, dueDate } = raw
+  const { id, title, done, createdAt, dueDate, time } = raw
   if (
     typeof id !== 'string' ||
     typeof title !== 'string' ||
@@ -21,8 +21,10 @@ function migrateItem(raw: unknown): Todo | null {
   let normalizedDue: string | null = null
   if (typeof dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
     normalizedDue = dueDate
-  } else if (dueDate !== undefined && dueDate !== null) {
-    normalizedDue = null
+  }
+  let normalizedTime: string | null = null
+  if (typeof time === 'string' && /^\d{2}:\d{2}$/.test(time)) {
+    normalizedTime = time
   }
   return {
     id,
@@ -30,6 +32,7 @@ function migrateItem(raw: unknown): Todo | null {
     done,
     createdAt,
     dueDate: normalizedDue,
+    time: normalizedTime,
   }
 }
 
@@ -56,20 +59,26 @@ export function useTodos() {
     persist(todos)
   }, [todos])
 
-  const add = useCallback((title: string, dueDate: string | null) => {
-    const trimmed = title.trim()
-    if (!trimmed) return
-    setTodos((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        title: trimmed,
-        done: false,
-        createdAt: Date.now(),
-        dueDate,
-      },
-    ])
-  }, [])
+  const add = useCallback(
+    (title: string, dueDate: string | null, time: string | null) => {
+      const trimmed = title.trim()
+      if (!trimmed) return
+      const normalizedTime =
+        time && /^\d{2}:\d{2}$/.test(time) ? time : null
+      setTodos((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          title: trimmed,
+          done: false,
+          createdAt: Date.now(),
+          dueDate,
+          time: normalizedTime,
+        },
+      ])
+    },
+    [],
+  )
 
   const toggle = useCallback((id: string) => {
     setTodos((prev) =>
@@ -87,9 +96,28 @@ export function useTodos() {
     )
   }, [])
 
+  const setTime = useCallback((id: string, time: string | null) => {
+    setTodos((prev) =>
+      prev.map((t) => {
+        if (t.id !== id) return t
+        const next =
+          time && /^\d{2}:\d{2}$/.test(time) ? time : null
+        return { ...t, time: next }
+      }),
+    )
+  }, [])
+
   const clearCompletedWhere = useCallback((predicate: (t: Todo) => boolean) => {
     setTodos((prev) => prev.filter((t) => !(t.done && predicate(t))))
   }, [])
 
-  return { todos, add, toggle, remove, setDueDate, clearCompletedWhere }
+  return {
+    todos,
+    add,
+    toggle,
+    remove,
+    setDueDate,
+    setTime,
+    clearCompletedWhere,
+  }
 }

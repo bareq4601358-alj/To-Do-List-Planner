@@ -5,6 +5,10 @@ export type Todo = {
   done: boolean
   createdAt: number
   dueDate: string | null
+  /** Local wall time HH:mm from `<input type="time">`, or null if none. */
+  time: string | null
 }
 
 export type Filter = 'all' | 'active' | 'completed'
+
+export type MainTab = 'planner' | 'notes'

@@ -1,26 +1,28 @@
 :root {
-  --bg: #f4f1ea;
-  --surface: #fffcf6;
-  --surface-2: #f0ebe2;
+  /* Page behind the card — clearly different from --surface */
+  --canvas: #c4d2c6;
+  --surface: #fffbf5;
+  --surface-2: #ede8df;
   --ink: #1a1714;
-  --muted: #6b645c;
-  --line: #e3ddd3;
+  --muted: #5c564e;
+  --line: #d4cdc2;
   --accent: #2d6a5d;
-  --accent-soft: rgba(45, 106, 93, 0.12);
+  --accent-soft: rgba(45, 106, 93, 0.14);
   --danger: #a63d40;
-  --danger-soft: rgba(166, 61, 64, 0.1);
-  --shadow: 0 22px 50px rgba(26, 23, 20, 0.08), 0 8px 18px rgba(26, 23, 20, 0.05);
+  --danger-soft: rgba(166, 61, 64, 0.12);
+  --shadow:
+    0 20px 48px rgba(26, 23, 20, 0.12), 0 6px 16px rgba(26, 23, 20, 0.06);
   --radius-lg: 20px;
   --radius-md: 12px;
   --radius-sm: 8px;
   --font-sans: 'Instrument Sans', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
+  --touch-min: 2.75rem;
 
   font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
   color: var(--ink);
-  background-color: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -29,17 +31,34 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121410;
-    --surface: #1b1a16;
-    --surface-2: #24221e;
+    --canvas: #070908;
+    --surface: #1c1b17;
+    --surface-2: #26241f;
     --ink: #f3efe8;
     --muted: #a39a90;
-    --line: #2f2c27;
+    --line: #35322c;
     --accent: #6ecfbd;
-    --accent-soft: rgba(110, 207, 189, 0.14);
+    --accent-soft: rgba(110, 207, 189, 0.16);
     --danger: #f08080;
-    --danger-soft: rgba(240, 128, 128, 0.12);
-    --shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 10px 24px rgba(0, 0, 0, 0.28);
+    --danger-soft: rgba(240, 128, 128, 0.14);
+    --shadow:
+      0 24px 56px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+}
+
+html {
+  background-color: var(--canvas);
+  overflow-x: clip;
+}
+
+@media (prefers-color-scheme: light) {
+  html {
+    background-image: radial-gradient(
+      120% 90% at 50% -15%,
+      color-mix(in srgb, var(--accent) 12%, var(--canvas)),
+      var(--canvas)
+    );
+    background-attachment: fixed;
   }
 }
 
@@ -52,14 +71,30 @@
 body {
   margin: 0;
   min-height: 100svh;
+  min-height: 100dvh;
+  background: transparent;
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 #root {
   min-height: 100svh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: clamp(1.5rem, 4vw, 3.5rem) 1.25rem 3rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+}
+
+@media (min-width: 480px) {
+  #root {
+    padding-top: max(1.5rem, env(safe-area-inset-top));
+    padding-right: max(1.25rem, env(safe-area-inset-right));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    padding-left: max(1.25rem, env(safe-area-inset-left));
+  }
 }
 
 .visually-hidden {
@@ -75,16 +110,28 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
   color: inherit;
 }
 
 button {
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+/* iOS: avoid auto-zoom on small font in focused fields */
+@media (max-width: 639px) {
+  input[type='text'],
+  input[type='time'],
+  input[type='date'],
+  textarea {
+    font-size: 1rem;
+  }
 }
