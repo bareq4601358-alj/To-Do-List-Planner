@@ -19,8 +19,12 @@ type Props = {
   onKeyDown?: (e: ReactKeyboardEvent<HTMLButtonElement>) => void
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
+const HOURS12 = Array.from({ length: 12 }, (_, i) => i + 1)
 const MINUTES = Array.from({ length: 60 }, (_, i) => i)
+const PERIODS = [
+  { value: 'am' as const, label: 'AM' },
+  { value: 'pm' as const, label: 'PM' },
+]
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -38,8 +42,30 @@ function parseParts(value: string): { hour: number; minute: number } {
   return { hour: h, minute: min }
 }
 
-function toValue(hour: number, minute: number) {
-  return `${pad2(hour)}:${pad2(minute)}`
+function to12(h24: number): { hour12: number; period: 'am' | 'pm' } {
+  if (h24 === 0) return { hour12: 12, period: 'am' }
+  if (h24 < 12) return { hour12: h24, period: 'am' }
+  if (h24 === 12) return { hour12: 12, period: 'pm' }
+  return { hour12: h24 - 12, period: 'pm' }
+}
+
+function to24(hour12: number, period: 'am' | 'pm'): number {
+  if (period === 'am') return hour12 === 12 ? 0 : hour12
+  return hour12 === 12 ? 12 : hour12 + 12
+}
+
+function parse12FromValue(value: string): {
+  hour12: number
+  minute: number
+  period: 'am' | 'pm'
+} {
+  const { hour: h24, minute } = parseParts(value)
+  const { hour12, period } = to12(h24)
+  return { hour12, minute, period }
+}
+
+function toValue(hour24: number, minute: number) {
+  return `${pad2(hour24)}:${pad2(minute)}`
 }
 
 function formatTriggerLabel(value: string) {
@@ -69,20 +95,31 @@ export function SafariDesktopTimeInput({
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
   const hourSelectRef = useRef<HTMLSelectElement>(null)
-  const [hour, setHour] = useState(() => parseParts(value).hour)
-  const [minute, setMinute] = useState(() => parseParts(value).minute)
+  const init = parse12FromValue(value)
+  const [hour12, setHour12] = useState(init.hour12)
+  const [minute, setMinute] = useState(init.minute)
+  const [period, setPeriod] = useState<'am' | 'pm'>(init.period)
 
   useEffect(() => {
-    const p = parseParts(value)
-    setHour(p.hour)
+    const p = parse12FromValue(value)
+    setHour12(p.hour12)
     setMinute(p.minute)
+    setPeriod(p.period)
   }, [value])
+
+  const applyTime = useCallback(
+    (h12: number, m: number, per: 'am' | 'pm') => {
+      const h24 = to24(h12, per)
+      onValueChange(toValue(h24, m))
+    },
+    [onValueChange],
+  )
 
   const placePanel = useCallback(() => {
     const el = btnRef.current
     if (!el) return
     const r = el.getBoundingClientRect()
-    const w = Math.max(r.width, 13.5 * 16)
+    const w = Math.max(r.width, 17 * 16)
     const left = Math.min(r.left, window.innerWidth - w - 8)
     setPos({ top: r.bottom + 6, left: Math.max(8, left), width: w })
   }, [])
@@ -127,10 +164,6 @@ export function SafariDesktopTimeInput({
     .filter(Boolean)
     .join(' ')
 
-  const applyHM = (h: number, m: number) => {
-    onValueChange(toValue(h, m))
-  }
-
   const panel = open ? (
     <div
       ref={panelRef}
@@ -154,18 +187,18 @@ export function SafariDesktopTimeInput({
         <select
           ref={hourSelectRef}
           id={`${uid}-h`}
-          className="time-dropdown-panel__select"
-          value={hour}
+          className="time-dropdown-panel__select time-dropdown-panel__select--hour"
+          value={hour12}
           disabled={disabled}
           onChange={(e) => {
             const h = Number(e.target.value)
-            setHour(h)
-            applyHM(h, minute)
+            setHour12(h)
+            applyTime(h, minute, period)
           }}
         >
-          {HOURS.map((h) => (
+          {HOURS12.map((h) => (
             <option key={h} value={h}>
-              {pad2(h)}
+              {h}
             </option>
           ))}
         </select>
@@ -177,18 +210,38 @@ export function SafariDesktopTimeInput({
         </label>
         <select
           id={`${uid}-m`}
-          className="time-dropdown-panel__select"
+          className="time-dropdown-panel__select time-dropdown-panel__select--minute"
           value={minute}
           disabled={disabled}
           onChange={(e) => {
             const m = Number(e.target.value)
             setMinute(m)
-            applyHM(hour, m)
+            applyTime(hour12, m, period)
           }}
         >
           {MINUTES.map((m) => (
             <option key={m} value={m}>
               {pad2(m)}
+            </option>
+          ))}
+        </select>
+        <label className="visually-hidden" htmlFor={`${uid}-ap`}>
+          AM or PM
+        </label>
+        <select
+          id={`${uid}-ap`}
+          className="time-dropdown-panel__select time-dropdown-panel__select--period"
+          value={period}
+          disabled={disabled}
+          onChange={(e) => {
+            const per = e.target.value as 'am' | 'pm'
+            setPeriod(per)
+            applyTime(hour12, minute, per)
+          }}
+        >
+          {PERIODS.map((p) => (
+            <option key={p.value} value={p.value}>
+              {p.label}
             </option>
           ))}
         </select>

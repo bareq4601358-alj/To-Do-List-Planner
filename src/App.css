@@ -476,6 +476,11 @@
   .row__time.time-dropdown-trigger:focus {
     color: var(--ink);
   }
+
+  /* No native clock affordance — extra padding was clipping the label in a narrow grid track */
+  .row__time.time-dropdown-trigger {
+    padding-inline-end: 0.65rem;
+  }
 }
 
 /* Safari desktop: custom time dropdown (button + portal panel) */
@@ -567,6 +572,21 @@ button.time-dropdown-trigger:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.time-dropdown-panel__select--hour {
+  flex: 0 0 4.35rem;
+  max-width: 5rem;
+}
+
+.time-dropdown-panel__select--minute {
+  flex: 1 1 5rem;
+  min-width: 0;
+}
+
+.time-dropdown-panel__select--period {
+  flex: 0 0 5rem;
+  min-width: 4.25rem;
 }
 
 .time-dropdown-panel__sep {
@@ -727,7 +747,7 @@ button.time-dropdown-trigger:focus {
 
 .list__head {
   display: grid;
-  grid-template-columns: minmax(4.75rem, 6rem) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(6.5rem, 10.5rem) minmax(0, 1fr) auto;
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.4rem 0.75rem 0.45rem;
@@ -830,7 +850,7 @@ button.time-dropdown-trigger:focus {
 
 .list__item {
   display: grid;
-  grid-template-columns: minmax(4.75rem, 6rem) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(6.5rem, 10.5rem) minmax(0, 1fr) auto;
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.55rem 0.65rem 0.55rem 0.75rem;
@@ -897,6 +917,10 @@ button.time-dropdown-trigger:focus {
   width: 100%;
 }
 
+.list__cell--time .time-input-shell {
+  min-width: 5.75rem;
+}
+
 .row__title {
   flex: 1;
   min-width: 0;
@@ -947,6 +971,7 @@ button.time-dropdown-trigger:focus {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  overflow: visible;
 }
 
 .row__date-wrap {
@@ -1062,30 +1087,43 @@ button.time-dropdown-trigger:focus {
   }
 
   .list__item {
-    grid-template-columns: minmax(0, 1fr) minmax(9.5rem, 42vw);
-    grid-template-rows: auto auto auto;
-    grid-template-areas:
-      'list-task list-time'
-      'list-task list-date'
-      'list-task list-remove';
-    column-gap: 0.85rem;
-    row-gap: 0.5rem;
-    align-items: stretch;
-    padding: 0.65rem 0.65rem 0.65rem 0.72rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+    grid-template-areas: 'list-time list-task list-remove';
+    align-items: center;
+    column-gap: 0.6rem;
+    padding: 0.5rem 0.55rem 0.5rem 0.6rem;
+    row-gap: 0;
   }
 
   .list__cell--task {
     grid-area: list-task;
     min-width: 0;
-    align-self: start;
+    align-self: center;
+  }
+
+  .list__cell--task .row {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .list__cell--task .row__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    min-width: 0;
   }
 
   .list__cell--time {
     grid-area: list-time;
-    justify-self: stretch;
-    align-self: stretch;
-    width: 100%;
-    max-width: 100%;
+    justify-self: start;
+    align-self: center;
+    width: auto;
+    max-width: min(10rem, 48vw);
     min-width: 0;
     position: relative;
   }
@@ -1095,25 +1133,24 @@ button.time-dropdown-trigger:focus {
   }
 
   .list__item .row__date-wrap {
-    grid-area: list-date;
-    justify-self: stretch;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    position: relative;
+    display: none !important;
   }
 
   .list__item .row__remove {
     grid-area: list-remove;
-    justify-self: stretch;
-    align-self: stretch;
-    width: 100%;
-    max-width: 100%;
+    justify-self: end;
+    align-self: center;
+    width: 2.45rem;
+    height: 2.45rem;
+    min-width: 2.45rem;
+    min-height: 2.45rem;
+    max-width: 2.45rem;
+    max-height: 2.45rem;
     margin: 0;
+    font-size: 1.2rem;
   }
 
-  .list__cell--time .field-label,
-  .list__item .row__date-wrap > .field-label {
+  .list__cell--time .field-label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1125,21 +1162,20 @@ button.time-dropdown-trigger:focus {
     border: 0;
   }
 
-  .list__cell--task .row__title {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  .list__item .row__date {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
   .list__cell--time .time-input-shell,
   .list__cell--time .time-input,
   .list__cell--time input.time-input {
     width: 100%;
+    max-width: 100%;
+  }
+
+  .list__cell--time .time-dropdown-trigger {
+    padding-inline: 0.45rem 1.85rem;
+    min-height: 2.45rem;
+  }
+
+  .list__item .row__time {
+    min-height: 2.45rem;
   }
 
   .planner-toolbar__nav {
@@ -1195,13 +1231,7 @@ button.time-dropdown-trigger:focus {
     height: 1.25rem;
     min-width: 1.25rem;
     min-height: 1.25rem;
-    margin-top: 0.35rem;
-  }
-
-  .row__remove {
-    width: var(--touch-min, 2.75rem);
-    height: var(--touch-min, 2.75rem);
-    font-size: 1.35rem;
+    margin-top: 0;
   }
 
   .notes-card__textarea {
