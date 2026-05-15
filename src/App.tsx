@@ -342,19 +342,27 @@ export default function App() {
                       />
                     </div>
                     <div className="list__cell list__cell--task">
-                      <label className="row">
+                      <div className="row">
                         <input
+                          id={`done-${todo.id}`}
                           className="row__check"
                           type="checkbox"
                           checked={todo.done}
                           onChange={() => toggle(todo.id)}
+                          aria-labelledby={`title-${todo.id}`}
                         />
-                        <span
-                          className={`row__title${todo.done ? ' row__title--done' : ''}${highlightId === todo.id ? ' row__title--fresh' : ''}`}
+                        <label
+                          className="row__title-label"
+                          htmlFor={`done-${todo.id}`}
                         >
-                          {todo.title}
-                        </span>
-                      </label>
+                          <span
+                            id={`title-${todo.id}`}
+                            className={`row__title${todo.done ? ' row__title--done' : ''}${highlightId === todo.id ? ' row__title--fresh' : ''}`}
+                          >
+                            {todo.title}
+                          </span>
+                        </label>
+                      </div>
                     </div>
                     <div className="list__cell list__cell--actions">
                       <label className="row__date-wrap">

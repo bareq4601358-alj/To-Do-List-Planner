@@ -324,7 +324,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
 }
 
 .composer__time-label {
@@ -336,9 +338,10 @@
 }
 
 .composer__time {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;
+  width: max-content;
   max-width: 100%;
+  min-width: 0;
   padding: 0.5rem 2.1rem 0.5rem 0.55rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -478,14 +481,16 @@
   }
 
   /* No native clock affordance — extra padding was clipping the label in a narrow grid track */
-  .row__time.time-dropdown-trigger {
+  .row__time.time-dropdown-trigger,
+  .composer__time.time-dropdown-trigger {
     padding-inline-end: 0.65rem;
   }
 }
 
 /* Safari desktop: custom time dropdown (button + portal panel) */
 .time-input-shell {
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
   min-width: 0;
   position: relative;
 }
@@ -497,7 +502,8 @@ button.time-dropdown-trigger {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
   margin: 0;
   font: inherit;
   text-align: start;
@@ -747,7 +753,7 @@ button.time-dropdown-trigger:focus {
 
 .list__head {
   display: grid;
-  grid-template-columns: minmax(6.5rem, 10.5rem) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.4rem 0.75rem 0.45rem;
@@ -850,7 +856,7 @@ button.time-dropdown-trigger:focus {
 
 .list__item {
   display: grid;
-  grid-template-columns: minmax(6.5rem, 10.5rem) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.5rem 0.65rem;
   align-items: center;
   padding: 0.55rem 0.65rem 0.55rem 0.75rem;
@@ -905,6 +911,17 @@ button.time-dropdown-trigger:focus {
   cursor: pointer;
 }
 
+.row__title-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: flex-start;
+  align-self: stretch;
+  cursor: pointer;
+}
+
 .row__check {
   margin-top: 0.2rem;
   width: 1.05rem;
@@ -913,12 +930,12 @@ button.time-dropdown-trigger:focus {
   flex-shrink: 0;
 }
 
-.list__cell--time .row__time {
-  width: 100%;
-}
-
-.list__cell--time .time-input-shell {
-  min-width: 5.75rem;
+.list__cell--time .row__time,
+.list__cell--time .time-input-shell,
+.list__cell--time input.time-input,
+.list__cell--time button.time-dropdown-trigger {
+  width: max-content;
+  max-width: 100%;
 }
 
 .row__title {
@@ -972,6 +989,10 @@ button.time-dropdown-trigger:focus {
   flex-direction: column;
   gap: 0.1rem;
   overflow: visible;
+  min-width: auto;
+  width: max-content;
+  max-width: 100%;
+  justify-self: start;
 }
 
 .row__date-wrap {
@@ -1109,6 +1130,10 @@ button.time-dropdown-trigger:focus {
     gap: 0.45rem;
   }
 
+  .list__cell--task .row__title-label {
+    min-width: 0;
+  }
+
   .list__cell--task .row__title {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1118,13 +1143,23 @@ button.time-dropdown-trigger:focus {
     min-width: 0;
   }
 
+  .list__cell--task .row__check {
+    flex-shrink: 0;
+    width: 1.4rem;
+    height: 1.4rem;
+    min-width: 1.4rem;
+    min-height: 1.4rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
   .list__cell--time {
     grid-area: list-time;
     justify-self: start;
     align-self: center;
-    width: auto;
-    max-width: min(10rem, 48vw);
-    min-width: 0;
+    width: max-content;
+    max-width: 100%;
+    min-width: auto;
     position: relative;
   }
 
@@ -1165,12 +1200,12 @@ button.time-dropdown-trigger:focus {
   .list__cell--time .time-input-shell,
   .list__cell--time .time-input,
   .list__cell--time input.time-input {
-    width: 100%;
+    width: max-content;
     max-width: 100%;
   }
 
   .list__cell--time .time-dropdown-trigger {
-    padding-inline: 0.45rem 1.85rem;
+    padding-inline: 0.4rem 0.62rem;
     min-height: 2.45rem;
   }
 
