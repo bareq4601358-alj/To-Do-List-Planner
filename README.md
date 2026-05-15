@@ -30,6 +30,25 @@ That runs a production build and pushes the contents of **`dist/`** to the **`gh
 
 Whenever you change the app and want the website updated, commit/push to **`main`** as usual, then run **`npm run deploy`** again.
 
+### New or replaced GitHub repository
+
+If you **deleted the repo and made a new one** (or renamed it), do this:
+
+1. Create the repo on GitHub as **empty** — uncheck README, .gitignore, and license so there is no first commit to fight with.
+2. In `vite.config.ts`, set **`repoBase`** to `'/<exact-repo-name>/'` (same spelling as in `github.com/you/<exact-repo-name>`).
+3. In this project folder:
+
+   ```bash
+   git remote remove origin
+   git remote add origin https://github.com/YOUR_USER/YOUR_REPO.git
+   git push -u origin main
+   npm run deploy
+   ```
+
+4. On GitHub: **Settings → Pages → Deploy from branch → `gh-pages` / `(root)`**.
+
+Your live URL will be `https://YOUR_USER.github.io/YOUR_REPO/`.
+
 ## Features
 
 - **Week view**: jump weeks, go to today, pick a day to see that day’s tasks
