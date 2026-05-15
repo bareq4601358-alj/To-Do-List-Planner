@@ -17,6 +17,8 @@
   --radius-sm: 8px;
   --font-sans: 'Instrument Sans', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
+  /* Brand word “Planner” — softer editorial serif */
+  --font-planner: 'Cormorant', 'Instrument Serif', Georgia, serif;
   --touch-min: 2.75rem;
 
   font-family: var(--font-sans);

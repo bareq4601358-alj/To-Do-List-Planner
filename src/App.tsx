@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+} from 'react'
 import type { Filter, Todo } from './types'
 import {
   addDays,
@@ -11,8 +19,7 @@ import {
   weekdayShort,
   weekKeys,
 } from './dates'
-import { BaStamp } from './BaStamp'
-import { useNotes } from './useNotes'
+import { NotesCard } from './NotesCard'
 import { useTodos } from './useTodos'
 import './App.css'
 
@@ -33,11 +40,16 @@ function sortTodosByTime(items: Todo[]): Todo[] {
   })
 }
 
-function openTimePicker(elementId: string) {
-  const el = document.getElementById(elementId)
-  if (!(el instanceof HTMLInputElement)) return
-  const picker = el as HTMLInputElement & { showPicker?: () => void }
-  picker.showPicker?.()
+function timeInputActivate(e: MouseEvent<HTMLInputElement>) {
+  const ext = e.currentTarget as HTMLInputElement & {
+    showPicker?: () => void | Promise<void>
+  }
+  try {
+    const result = ext.showPicker?.()
+    void Promise.resolve(result).catch(() => {})
+  } catch {
+    /* older browsers: native control still works */
+  }
 }
 
 export default function App() {
@@ -50,7 +62,6 @@ export default function App() {
     setTime,
     clearCompletedWhere,
   } = useTodos()
-  const { notes, setNotes } = useNotes()
 
   const mondayThisWeek = useMemo(
     () => toDateKey(startOfWeekMonday(new Date())),
@@ -61,6 +72,7 @@ export default function App() {
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [selected, setSelected] = useState<string | 'inbox'>(() => todayKey())
+  const notesScope = selected === 'inbox' ? 'inbox' : selected
   const [draft, setDraft] = useState('')
   const [draftTime, setDraftTime] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
@@ -119,7 +131,7 @@ export default function App() {
     setSelected(todayKey())
   }
 
-  function onSubmit(e: React.FormEvent) {
+  function onSubmit(e: FormEvent) {
     e.preventDefault()
     const timeVal = draftTime.trim() || null
     const newId = add(draft, selected === 'inbox' ? null : selected, timeVal)
@@ -154,26 +166,17 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-brand">
-        <div className="app-brand__top">
-          <h1 className="app-brand__title">
-            <span className="app-brand__line">
-              <span className="app-brand__todo">To-do list</span>
-              <span className="app-brand__slash" aria-hidden="true">
-                /
-              </span>
-              <span className="app-brand__planner">Planner</span>
+        <h1 className="app-brand__title">
+          <span className="app-brand__line">
+            <span className="app-brand__todo">To-do list</span>
+            <span className="app-brand__slash" aria-hidden="true">
+              /
             </span>
-          </h1>
-          <div
-            className="ba-stamp-wrap"
-            title="Bareq Aljuboori"
-            aria-label="Bareq Aljuboori — BA monogram stamp"
-          >
-            <BaStamp />
-          </div>
-        </div>
+            <span className="app-brand__planner">Planner</span>
+          </span>
+        </h1>
         <p className="app-brand__tagline">
-          Week view, times, and notes — saved in this browser.
+          Week view, times, and notes — saved only in this browser.
         </p>
       </header>
 
@@ -275,31 +278,22 @@ export default function App() {
                 <label className="composer__time-label" htmlFor="task-time">
                   Time
                 </label>
-                <div className="time-field">
-                  <input
-                    id="task-time"
-                    className="composer__time"
-                    type="time"
-                    step={60}
-                    value={draftTime}
-                    onChange={(e) => setDraftTime(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="time-field__open"
-                    aria-label="Open time picker"
-                    onClick={() => openTimePicker('task-time')}
-                  >
-                    Pick
-                  </button>
-                </div>
+                <input
+                  id="task-time"
+                  className="composer__time"
+                  type="time"
+                  step={60}
+                  value={draftTime}
+                  onChange={(e) => setDraftTime(e.target.value)}
+                  onClick={timeInputActivate}
+                />
               </div>
               <button className="composer__submit" type="submit">
                 Add
               </button>
             </div>
             <p className="composer__hint">
-              Time is optional — tap the field or &quot;Pick&quot; to choose a time.
+              Time is optional — tap the time field to change it.
             </p>
           </form>
 
@@ -354,26 +348,17 @@ export default function App() {
                       <label className="field-label" htmlFor={`time-${todo.id}`}>
                         Time
                       </label>
-                      <div className="time-field">
-                        <input
-                          id={`time-${todo.id}`}
-                          className="row__time"
-                          type="time"
-                          step={60}
-                          value={todo.time ?? ''}
-                          onChange={(e) =>
-                            setTime(todo.id, e.target.value || null)
-                          }
-                        />
-                        <button
-                          type="button"
-                          className="time-field__open"
-                          aria-label={`Open time picker for ${todo.title}`}
-                          onClick={() => openTimePicker(`time-${todo.id}`)}
-                        >
-                          Pick
-                        </button>
-                      </div>
+                      <input
+                        id={`time-${todo.id}`}
+                        className="row__time"
+                        type="time"
+                        step={60}
+                        value={todo.time ?? ''}
+                        onChange={(e) =>
+                          setTime(todo.id, e.target.value || null)
+                        }
+                        onClick={timeInputActivate}
+                      />
                     </div>
                     <div className="list__cell list__cell--task">
                       <label className="row">
@@ -384,7 +369,7 @@ export default function App() {
                           onChange={() => toggle(todo.id)}
                         />
                         <span
-                          className={`row__title${todo.done ? ' row__title--done' : ' row__title--open'}${highlightId === todo.id ? ' row__title--fresh' : ''}`}
+                          className={`row__title${todo.done ? ' row__title--done' : ''}${highlightId === todo.id ? ' row__title--fresh' : ''}`}
                         >
                           {todo.title}
                         </span>
@@ -415,32 +400,9 @@ export default function App() {
                 ))
               )}
             </ul>
-            <section
-              className="notes-inline"
-              aria-labelledby="notes-inline-heading"
-            >
-              <h3 className="notes-inline__heading" id="notes-inline-heading">
-                Notes
-              </h3>
-              <p className="notes-inline__lede">
-                Same box as your list — jot anything below your tasks for this
-                view.
-              </p>
-              <label className="visually-hidden" htmlFor="notes-inline-body">
-                Notes
-              </label>
-              <textarea
-                id="notes-inline-body"
-                className="notes-inline__textarea"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Write freely…"
-                rows={6}
-                spellCheck
-              />
-              <p className="notes-inline__hint">Autosaved in this browser.</p>
-            </section>
           </div>
+
+          <NotesCard key={notesScope} scopeKey={notesScope} />
 
           {scopeTodos.length > 0 && (
             <footer className="footer">
