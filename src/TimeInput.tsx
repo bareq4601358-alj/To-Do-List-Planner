@@ -1,4 +1,11 @@
-import { useEffect, useRef, type InputHTMLAttributes } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type InputHTMLAttributes,
+  type KeyboardEvent,
+} from 'react'
+import { SafariDesktopTimeInput } from './SafariDesktopTimeInput'
 
 function openPicker(el: HTMLInputElement) {
   try {
@@ -11,21 +18,27 @@ function openPicker(el: HTMLInputElement) {
   }
 }
 
+function isPureWebKit(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent
+  if (!/AppleWebKit/.test(ua)) return false
+  return !/\b(?:Chrome|Chromium|CriOS|EdgA?)\b/.test(ua)
+}
+
+function readSafariDesktopDropdown(): boolean {
+  if (typeof window === 'undefined') return false
+  return (
+    isPureWebKit() &&
+    window.matchMedia('(min-width: 640px) and (pointer: fine)').matches
+  )
+}
+
 /**
- * Pure WebKit (Safari desktop, iOS Safari, in-app WKWebView): native time UI is
- * opened from the default pointer/click path. Calling `showPicker()` here often
- * rejects or fights that path, leaving the field unresponsive.
- *
- * Blink-based browsers (Chrome, Edge, Opera, Chrome iOS) still benefit from a
- * native capture listener so `showPicker()` runs in a real user gesture (React
- * synthetics can drop activation).
+ * Blink / Chrome-family: native `pointerdown` + `showPicker()` keeps user
+ * activation. Pure WebKit (Safari): no listener on the native input path.
  */
 function shouldApplyProgrammaticTimePicker(): boolean {
-  if (typeof navigator === 'undefined') return true
-  const ua = navigator.userAgent
-  if (!/AppleWebKit/.test(ua)) return true
-  if (/\b(?:Chrome|Chromium|CriOS|EdgA?)\b/.test(ua)) return true
-  return false
+  return !isPureWebKit()
 }
 
 type Props = Omit<
@@ -37,20 +50,32 @@ type Props = Omit<
 }
 
 /**
- * Blink: native `pointerdown` capture + `showPicker()` keeps user activation.
- * Safari / pure WebKit: no listener — rely on native picker + CSS that does not
- * cover the field with an invisible calendar indicator (see App.css).
- *
- * Touch is skipped on Blink so phones keep a single native time UI.
+ * Safari desktop: custom hour/minute dropdown (Chrome-like). Other platforms:
+ * native `input type="time"` with programmatic picker on Blink desktop.
+ * Touch stays native everywhere.
  */
 export function TimeInput({
   value,
   onValueChange,
   onKeyDown,
   className,
+  id,
+  disabled,
+  name,
   ...rest
 }: Props) {
   const ref = useRef<HTMLInputElement>(null)
+  const [safariDesktopDropdown, setSafariDesktopDropdown] = useState(
+    readSafariDesktopDropdown,
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 640px) and (pointer: fine)')
+    const sync = () => setSafariDesktopDropdown(readSafariDesktopDropdown())
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     const el = ref.current
@@ -68,12 +93,33 @@ export function TimeInput({
       })
   }, [])
 
+  if (safariDesktopDropdown) {
+    return (
+      <SafariDesktopTimeInput
+        id={id}
+        name={name}
+        disabled={disabled}
+        value={value}
+        onValueChange={onValueChange}
+        onKeyDown={
+          onKeyDown as
+            | ((e: KeyboardEvent<HTMLButtonElement>) => void)
+            | undefined
+        }
+        className={className}
+      />
+    )
+  }
+
   const mergedClass = [className, 'time-input'].filter(Boolean).join(' ')
 
   return (
     <input
       {...rest}
       ref={ref}
+      id={id}
+      name={name}
+      disabled={disabled}
       className={mergedClass || undefined}
       type="time"
       step={60}

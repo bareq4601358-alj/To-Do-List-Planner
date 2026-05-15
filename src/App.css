@@ -447,7 +447,8 @@
     border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
   }
 
-  .composer__time.time-input {
+  .composer__time.time-input,
+  .composer__time.time-dropdown-trigger {
     min-height: 2.8rem;
     padding: 0.55rem 2.45rem 0.55rem 0.75rem;
     font-size: 0.95rem;
@@ -458,7 +459,8 @@
       0 1px 3px color-mix(in srgb, var(--ink) 8%, transparent);
   }
 
-  .row__time.time-input {
+  .row__time.time-input,
+  .row__time.time-dropdown-trigger {
     min-height: 2.35rem;
     padding: 0.42rem 2.15rem 0.42rem 0.55rem;
     font-size: 0.9rem;
@@ -470,9 +472,156 @@
       0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent);
   }
 
-  .row__time.time-input:focus {
+  .row__time.time-input:focus,
+  .row__time.time-dropdown-trigger:focus {
     color: var(--ink);
   }
+}
+
+/* Safari desktop: custom time dropdown (button + portal panel) */
+.time-input-shell {
+  width: 100%;
+  min-width: 0;
+  position: relative;
+}
+
+button.time-dropdown-trigger {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+button.time-dropdown-trigger:focus {
+  outline: none;
+}
+
+.composer__time.time-dropdown-trigger:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.row__time.time-dropdown-trigger:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.time-dropdown-trigger__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.time-dropdown-trigger__caret {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  line-height: 1;
+  opacity: 0.55;
+  transform: translateY(1px);
+}
+
+.time-dropdown-panel {
+  box-sizing: border-box;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  color-scheme: light dark;
+}
+
+.time-dropdown-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.time-dropdown-panel__select {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.time-dropdown-panel__select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.time-dropdown-panel__sep {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.time-dropdown-panel__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--line);
+}
+
+.time-dropdown-panel__link {
+  border: none;
+  background: none;
+  padding: 0.25rem 0.15rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.time-dropdown-panel__link:hover {
+  color: var(--ink);
+}
+
+.time-dropdown-panel__done {
+  padding: 0.42rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .time-dropdown-panel__done {
+    color: #0f1412;
+  }
+}
+
+.time-dropdown-panel__done:hover {
+  filter: brightness(1.06);
 }
 
 .composer__hint {
@@ -913,28 +1062,32 @@
   }
 
   .list__item {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(9.5rem, 42vw);
     grid-template-rows: auto auto auto;
     grid-template-areas:
       'list-task list-time'
       'list-task list-date'
       'list-task list-remove';
-    column-gap: 0.65rem;
-    row-gap: 0.45rem;
-    align-items: start;
+    column-gap: 0.85rem;
+    row-gap: 0.5rem;
+    align-items: stretch;
+    padding: 0.65rem 0.65rem 0.65rem 0.72rem;
   }
 
   .list__cell--task {
     grid-area: list-task;
     min-width: 0;
+    align-self: start;
   }
 
   .list__cell--time {
     grid-area: list-time;
-    justify-self: end;
-    align-self: center;
+    justify-self: stretch;
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
-    max-width: min(11rem, 100%);
+    position: relative;
   }
 
   .list__cell--actions {
@@ -943,14 +1096,33 @@
 
   .list__item .row__date-wrap {
     grid-area: list-date;
-    justify-self: end;
+    justify-self: stretch;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
+    position: relative;
   }
 
   .list__item .row__remove {
     grid-area: list-remove;
-    justify-self: end;
-    align-self: center;
+    justify-self: stretch;
+    align-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .list__cell--time .field-label,
+  .list__item .row__date-wrap > .field-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .list__cell--task .row__title {
@@ -959,7 +1131,15 @@
   }
 
   .list__item .row__date {
+    width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .list__cell--time .time-input-shell,
+  .list__cell--time .time-input,
+  .list__cell--time input.time-input {
+    width: 100%;
   }
 
   .planner-toolbar__nav {
